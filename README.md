@@ -120,16 +120,18 @@ Sistema completo de gestão financeira desenvolvido para gerenciar finanças de 
 4. **Categorias** (`#categorias`): Gerenciamento de categorias
 5. **Relatórios** (`#relatorios`): Geração de relatórios financeiros
 
-## 🔌 API RESTful Utilizada
+## 🔌 Supabase (Persistência de Dados)
 
-O sistema utiliza a API RESTful de tabelas para persistência de dados:
+O sistema utiliza o Supabase como banco de dados e faz as operações via `supabase-js`.
 
-### Endpoints Utilizados:
-- `GET tables/{table}?limit=100` - Listar registros
-- `GET tables/{table}/{id}` - Buscar registro específico
-- `POST tables/{table}` - Criar novo registro
-- `PUT tables/{table}/{id}` - Atualizar registro
-- `DELETE tables/{table}/{id}` - Excluir registro
+### ✅ Como configurar
+1. Crie um projeto no Supabase e copie:
+   - **Project URL**
+   - **Anon Public Key**
+2. Abra o arquivo `js/config.js` e substitua:
+   - `url`
+   - `anonKey`
+3. Garanta que as tabelas abaixo existam no Supabase.
 
 ## 🎨 Bibliotecas Utilizadas
 
@@ -228,7 +230,7 @@ O sistema utiliza a API RESTful de tabelas para persistência de dados:
 - **JavaScript (ES6+)**: Lógica e interatividade
 - **Chart.js**: Visualizações de dados
 - **Font Awesome**: Biblioteca de ícones
-- **RESTful API**: Persistência de dados
+- **Supabase**: Persistência de dados
 
 ## 📱 Compatibilidade
 
@@ -250,8 +252,8 @@ O sistema utiliza a API RESTful de tabelas para persistência de dados:
 
 ## 📝 Notas Importantes
 
-- Todas as transações são armazenadas localmente no banco de dados do projeto
-- Os dados são persistentes entre sessões
+- Todas as transações são armazenadas no Supabase
+- É necessário configurar a URL e a chave anon antes de usar o sistema
 - O sistema calcula automaticamente o saldo das contas baseado nas transações
 - Categorias e contas podem ser editadas ou excluídas
 - Transações excluídas não afetam os saldos iniciais das contas
