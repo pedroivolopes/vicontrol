@@ -8,8 +8,38 @@ const App = {
     charts: {}
 };
 
+let supabaseClient = null;
+
+function initSupabase() {
+    const config = window.SUPABASE_CONFIG || {};
+    const supabaseUrl = config.url;
+    const supabaseAnonKey = config.anonKey;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        alert('Configure a URL e a chave anon do Supabase em js/config.js');
+        throw new Error('Supabase não configurado');
+    }
+
+    if (supabaseUrl.includes('SEU-PROJETO') || supabaseAnonKey.includes('SUA_SUPABASE')) {
+        alert('Atualize os dados do Supabase em js/config.js');
+        throw new Error('Supabase não configurado');
+    }
+
+    if (!window.supabase?.createClient) {
+        throw new Error('Biblioteca do Supabase não encontrada');
+    }
+
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+}
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
+    try {
+        initSupabase();
+    } catch (error) {
+        console.error('Erro ao iniciar Supabase:', error);
+        return;
+    }
     initNavigation();
     initModals();
     initForms();
@@ -92,9 +122,14 @@ async function loadData() {
 
 async function loadCategorias() {
     try {
-        const response = await fetch('tables/categorias?limit=100');
-        const result = await response.json();
-        App.categorias = result.data || [];
+        const { data, error } = await supabaseClient
+            .from('categorias')
+            .select('*')
+            .limit(100);
+
+        if (error) throw error;
+
+        App.categorias = data || [];
         
         // Atualizar select de categorias
         updateCategoriasSelect();
@@ -110,9 +145,14 @@ async function loadCategorias() {
 
 async function loadContas() {
     try {
-        const response = await fetch('tables/contas?limit=100');
-        const result = await response.json();
-        App.contas = result.data || [];
+        const { data, error } = await supabaseClient
+            .from('contas')
+            .select('*')
+            .limit(100);
+
+        if (error) throw error;
+
+        App.contas = data || [];
         
         // Aplicar filtro
         if (App.currentFilter !== 'todos') {
@@ -133,9 +173,15 @@ async function loadContas() {
 
 async function loadTransacoes() {
     try {
-        const response = await fetch('tables/transacoes?limit=1000&sort=-data');
-        const result = await response.json();
-        let transacoes = result.data || [];
+        const { data, error } = await supabaseClient
+            .from('transacoes')
+            .select('*')
+            .order('data', { ascending: false })
+            .limit(1000);
+
+        if (error) throw error;
+
+        let transacoes = data || [];
         
         // Aplicar filtro de tipo de pessoa baseado na conta
         if (App.currentFilter !== 'todos') {
@@ -675,18 +721,19 @@ async function saveTransacao() {
     try {
         if (id) {
             data.id = id;
-            await fetch(`tables/transacoes/${id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            const { error } = await supabaseClient
+                .from('transacoes')
+                .update(data)
+                .eq('id', id);
+
+            if (error) throw error;
         } else {
             data.id = 'trans-' + Date.now();
-            await fetch('tables/transacoes', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            const { error } = await supabaseClient
+                .from('transacoes')
+                .insert(data);
+
+            if (error) throw error;
         }
         
         document.getElementById('transacaoModal').classList.remove('active');
@@ -710,18 +757,19 @@ async function saveConta() {
     try {
         if (id) {
             data.id = id;
-            await fetch(`tables/contas/${id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            const { error } = await supabaseClient
+                .from('contas')
+                .update(data)
+                .eq('id', id);
+
+            if (error) throw error;
         } else {
             data.id = 'conta-' + Date.now();
-            await fetch('tables/contas', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            const { error } = await supabaseClient
+                .from('contas')
+                .insert(data);
+
+            if (error) throw error;
         }
         
         document.getElementById('contaModal').classList.remove('active');
@@ -744,18 +792,19 @@ async function saveCategoria() {
     try {
         if (id) {
             data.id = id;
-            await fetch(`tables/categorias/${id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            const { error } = await supabaseClient
+                .from('categorias')
+                .update(data)
+                .eq('id', id);
+
+            if (error) throw error;
         } else {
             data.id = 'cat-' + Date.now();
-            await fetch('tables/categorias', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            const { error } = await supabaseClient
+                .from('categorias')
+                .insert(data);
+
+            if (error) throw error;
         }
         
         document.getElementById('categoriaModal').classList.remove('active');
@@ -775,7 +824,13 @@ async function deleteTransacao(id) {
     if (!confirm('Deseja realmente excluir esta transação?')) return;
     
     try {
-        await fetch(`tables/transacoes/${id}`, { method: 'DELETE' });
+        const { error } = await supabaseClient
+            .from('transacoes')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
         await loadData();
     } catch (error) {
         console.error('Erro ao excluir transação:', error);
@@ -785,9 +840,18 @@ async function deleteTransacao(id) {
 
 async function editConta(id) {
     // Recarregar todas as contas (sem filtro)
-    const response = await fetch('tables/contas?limit=100');
-    const result = await response.json();
-    App.contas = result.data || [];
+    const { data, error } = await supabaseClient
+        .from('contas')
+        .select('*')
+        .limit(100);
+
+    if (error) {
+        console.error('Erro ao carregar contas:', error);
+        alert('Erro ao carregar contas');
+        return;
+    }
+
+    App.contas = data || [];
     openContaModal(id);
 }
 
@@ -795,7 +859,13 @@ async function deleteConta(id) {
     if (!confirm('Deseja realmente excluir esta conta?')) return;
     
     try {
-        await fetch(`tables/contas/${id}`, { method: 'DELETE' });
+        const { error } = await supabaseClient
+            .from('contas')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
         await loadData();
     } catch (error) {
         console.error('Erro ao excluir conta:', error);
@@ -811,7 +881,13 @@ async function deleteCategoria(id) {
     if (!confirm('Deseja realmente excluir esta categoria?')) return;
     
     try {
-        await fetch(`tables/categorias/${id}`, { method: 'DELETE' });
+        const { error } = await supabaseClient
+            .from('categorias')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
         await loadData();
     } catch (error) {
         console.error('Erro ao excluir categoria:', error);
