@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão Financeira - PF e PJ</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-wallet"></i>
+            <h1>FinanceControl</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <i class="fas fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="transacoes">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Transações</span>
+            </a>
+            <a href="#" class="nav-item" data-page="contas">
+                <i class="fas fa-university"></i>
+                <span>Contas</span>
+            </a>
+            <a href="#" class="nav-item" data-page="categorias">
+                <i class="fas fa-tags"></i>
+                <span>Categorias</span>
+            </a>
+            <a href="#" class="nav-item" data-page="relatorios">
+                <i class="fas fa-file-invoice"></i>
+                <span>Relatórios</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 id="pageTitle">Dashboard</h2>
+            </div>
+            <div class="header-right">
+                <div class="filter-pessoa">
+                    <button class="btn-filter active" data-tipo="todos">Todos</button>
+                    <button class="btn-filter" data-tipo="PF">Pessoa Física</button>
+                    <button class="btn-filter" data-tipo="PJ">Pessoa Jurídica</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Page -->
+        <div class="page-content active" id="dashboard-page">
+            <!-- Cards de Resumo -->
+            <div class="cards-grid">
+                <div class="card card-receitas">
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Receitas</h3>
+                        <p class="card-value" id="totalReceitas">R$ 0,00</p>
+                        <small class="card-subtitle">Este mês</small>
+                    </div>
+                </div>
+                <div class="card card-despesas">
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Despesas</h3>
+                        <p class="card-value" id="totalDespesas">R$ 0,00</p>
+                        <small class="card-subtitle">Este mês</small>
+                    </div>
+                </div>
+                <div class="card card-saldo">
+                    <div class="card-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Saldo</h3>
+                        <p class="card-value" id="saldoTotal">R$ 0,00</p>
+                        <small class="card-subtitle">Saldo atual</small>
+                    </div>
+                </div>
+                <div class="card card-pendentes">
+                    <div class="card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Pendentes</h3>
+                        <p class="card-value" id="totalPendentes">R$ 0,00</p>
+                        <small class="card-subtitle">A pagar/receber</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Receitas vs Despesas</h3>
+                    <div style="height: 350px;">
+                        <canvas id="receitasDespesasChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h3>Despesas por Categoria</h3>
+                    <div style="height: 350px;">
+                        <canvas id="categoriasDespesasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transações Recentes -->
+            <div class="recent-transactions">
+                <h3>Transações Recentes</h3>
+                <div class="transactions-list" id="recentTransactionsList">
+                    <p class="no-data">Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transações Page -->
+        <div class="page-content" id="transacoes-page">
+            <div class="page-header">
+                <button class="btn btn-primary" id="btnNovaTransacao">
+                    <i class="fas fa-plus"></i> Nova Transação
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Categoria</th>
+                            <th>Conta</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transacoesTableBody">
+                        <tr>
+                            <td colspan="7" class="no-data">Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Contas Page -->
+        <div class="page-content" id="contas-page">
+            <div class="page-header">
+                <button class="btn btn-primary" id="btnNovaConta">
+                    <i class="fas fa-plus"></i> Nova Conta
+                </button>
+            </div>
+
+            <div class="cards-grid" id="contasGrid">
+                <p class="no-data">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Categorias Page -->
+        <div class="page-content" id="categorias-page">
+            <div class="page-header">
+                <button class="btn btn-primary" id="btnNovaCategoria">
+                    <i class="fas fa-plus"></i> Nova Categoria
+                </button>
+            </div>
+
+            <div class="categories-grid">
+                <div class="category-section">
+                    <h3><i class="fas fa-arrow-up" style="color: #10b981;"></i> Receitas</h3>
+                    <div class="categories-list" id="receitasCategoriasList">
+                        <p class="no-data">Carregando...</p>
+                    </div>
+                </div>
+                <div class="category-section">
+                    <h3><i class="fas fa-arrow-down" style="color: #ef4444;"></i> Despesas</h3>
+                    <div class="categories-list" id="despesasCategoriasList">
+                        <p class="no-data">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatórios Page -->
+        <div class="page-content" id="relatorios-page">
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label>Período:</label>
+                    <select id="periodoFilter">
+                        <option value="mes-atual">Mês Atual</option>
+                        <option value="mes-anterior">Mês Anterior</option>
+                        <option value="trimestre">Último Trimestre</option>
+                        <option value="ano">Ano Atual</option>
+                        <option value="personalizado">Personalizado</option>
+                    </select>
+                </div>
+                <div class="filter-group" id="customDateRange" style="display: none;">
+                    <label>De:</label>
+                    <input type="date" id="dataInicio">
+                    <label>Até:</label>
+                    <input type="date" id="dataFim">
+                </div>
+                <button class="btn btn-primary" id="btnGerarRelatorio">
+                    <i class="fas fa-chart-bar"></i> Gerar Relatório
+                </button>
+                <button class="btn btn-secondary" id="btnExportarRelatorio">
+                    <i class="fas fa-download"></i> Exportar
+                </button>
+            </div>
+
+            <div class="relatorio-content" id="relatorioContent">
+                <p class="no-data">Selecione um período e clique em "Gerar Relatório"</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Transação -->
+    <div class="modal" id="transacaoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="transacaoModalTitle">Nova Transação</h2>
+                <button class="modal-close" id="closeTransacaoModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="transacaoForm">
+                <input type="hidden" id="transacaoId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo *</label>
+                        <div class="tipo-toggle">
+                            <button type="button" class="tipo-btn active" data-tipo="receita">
+                                <i class="fas fa-arrow-up"></i> Receita
+                            </button>
+                            <button type="button" class="tipo-btn" data-tipo="despesa">
+                                <i class="fas fa-arrow-down"></i> Despesa
+                            </button>
+                        </div>
+                        <input type="hidden" id="transacaoTipo" value="receita" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label for="transacaoDescricao">Descrição *</label>
+                        <input type="text" id="transacaoDescricao" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transacaoValor">Valor *</label>
+                        <input type="number" id="transacaoValor" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transacaoData">Data *</label>
+                        <input type="date" id="transacaoData" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transacaoCategoria">Categoria *</label>
+                        <select id="transacaoCategoria" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transacaoConta">Conta *</label>
+                        <select id="transacaoConta" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="transacaoPago">
+                            <span>Pago/Recebido</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="transacaoRecorrente">
+                            <span>Recorrente</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label for="transacaoObservacoes">Observações</label>
+                        <textarea id="transacaoObservacoes" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelTransacao">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Conta -->
+    <div class="modal" id="contaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="contaModalTitle">Nova Conta</h2>
+                <button class="modal-close" id="closeContaModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="contaForm">
+                <input type="hidden" id="contaId">
+                
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label for="contaNome">Nome da Conta *</label>
+                        <input type="text" id="contaNome" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contaTipoPessoa">Tipo de Pessoa *</label>
+                        <select id="contaTipoPessoa" required>
+                            <option value="PF">Pessoa Física (PF)</option>
+                            <option value="PJ">Pessoa Jurídica (PJ)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contaSaldoInicial">Saldo Inicial *</label>
+                        <input type="number" id="contaSaldoInicial" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contaCor">Cor *</label>
+                        <input type="color" id="contaCor" value="#3b82f6" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="contaAtiva" checked>
+                            <span>Conta Ativa</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelConta">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Categoria -->
+    <div class="modal" id="categoriaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="categoriaModalTitle">Nova Categoria</h2>
+                <button class="modal-close" id="closeCategoriaModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="categoriaForm">
+                <input type="hidden" id="categoriaId">
+                
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label for="categoriaNome">Nome da Categoria *</label>
+                        <input type="text" id="categoriaNome" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoriaTipo">Tipo *</label>
+                        <select id="categoriaTipo" required>
+                            <option value="receita">Receita</option>
+                            <option value="despesa">Despesa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoriaCor">Cor *</label>
+                        <input type="color" id="categoriaCor" value="#3b82f6" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label for="categoriaIcone">Ícone (Font Awesome) *</label>
+                        <input type="text" id="categoriaIcone" placeholder="Ex: fa-home" required>
+                        <small>Escolha um ícone em <a href="https://fontawesome.com/icons" target="_blank">Font Awesome</a></small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelCategoria">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
